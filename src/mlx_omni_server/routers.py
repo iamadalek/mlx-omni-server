@@ -5,6 +5,7 @@ from .chat.openai import router as chat_router
 from .chat.openai.models import models
 from .embeddings import router as embeddings_router
 from .images import images
+from .rerank import router as rerank_router
 from .stt import stt as stt_router
 from .tts import tts as tts_router
 
@@ -15,4 +16,5 @@ api_router.include_router(models.router)
 api_router.include_router(images.router)
 api_router.include_router(chat_router.router)
 api_router.include_router(embeddings_router.router)
+api_router.include_router(rerank_router.router)
 api_router.include_router(anthropic_router.router, prefix="/anthropic")

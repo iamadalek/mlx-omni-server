@@ -44,6 +44,9 @@ dependencies = [
     "mflux>=0.11.0,<0.12",
     # embeddings
     "mlx-embeddings>=0.0.3",
+    # reranking
+    "numpy>=1.24.0",
+    "safetensors>=0.4.0",
 ]
 
 [project.urls]

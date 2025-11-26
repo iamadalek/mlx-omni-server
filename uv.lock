@@ -2429,7 +2429,7 @@ wheels = [
 
 [[package]]
 name = "mlx-embeddings"
-version = "0.0.3"
+version = "0.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "huggingface-hub" },
@@ -2437,9 +2437,9 @@ dependencies = [
     { name = "mlx-vlm" },
     { name = "transformers", extra = ["sentencepiece"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b7/67/bff944f4b6b529aeb0ae03d031cc465441c2b4839f418bacdfb205045a2c/mlx_embeddings-0.0.3.tar.gz", hash = "sha256:c8cae0cc16009dc91141d4fe36a7d3f374b07a0b46d9e8216ece9bf58a66256e", size = 464024, upload-time = "2025-04-03T14:38:51.592Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ef/b8/2f6f9e48386c1ab6fc0431d683296c45eb4bbcc5d3b4b2bf9594746d1efe/mlx_embeddings-0.0.5.tar.gz", hash = "sha256:0bcced68df6fb51ab98cd8ce5ae7a32db3853bca20e8c1c45e86452ed1d9d605", size = 475449, upload-time = "2025-10-29T22:38:28.853Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d4/95/fc3ad54fd89144a51d725724182ddbce3c9a97f1f78b69adbce3d9d71cad/mlx_embeddings-0.0.3-py2.py3-none-any.whl", hash = "sha256:8d9a6734b1559a3d8f06376ad62e1e3f4f727d6777bba4d3f1973956982f5145", size = 37580, upload-time = "2025-04-03T14:38:50.213Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/66/524db48e1e90ae071589ebcd29cd8e03daa4f69ac63718f0977dac922f0f/mlx_embeddings-0.0.5-py2.py3-none-any.whl", hash = "sha256:3c13eba4c10d26362e6d92f5faffd58d1d9ab28d56f1ee210ea7766c7980c24a", size = 51547, upload-time = "2025-10-29T22:38:27.463Z" },
 ]
 
 [[package]]
@@ -2471,7 +2471,7 @@ wheels = [
 
 [[package]]
 name = "mlx-omni-server"
-version = "0.5.0"
+version = "0.5.1"
 source = { editable = "." }
 dependencies = [
     { name = "f5-tts-mlx" },
@@ -2483,10 +2483,12 @@ dependencies = [
     { name = "mlx-lm" },
     { name = "mlx-whisper" },
     { name = "numba" },
+    { name = "numpy" },
     { name = "outlines" },
     { name = "pydantic" },
     { name = "python-multipart" },
     { name = "rich" },
+    { name = "safetensors" },
     { name = "sse-starlette" },
     { name = "uvicorn" },
 ]
@@ -2511,14 +2513,16 @@ requires-dist = [
     { name = "huggingface-hub", specifier = ">=0.30" },
     { name = "mflux", specifier = ">=0.11.0,<0.12" },
     { name = "mlx-audio", specifier = ">=0.2.4" },
-    { name = "mlx-embeddings", specifier = ">=0.0.3" },
+    { name = "mlx-embeddings", specifier = ">=0.0.4" },
     { name = "mlx-lm", specifier = ">=0.28.2" },
     { name = "mlx-whisper", specifier = ">=0.4.1" },
     { name = "numba", specifier = ">=0.57.0" },
+    { name = "numpy", specifier = ">=1.24.0" },
     { name = "outlines", specifier = "==1.0.4" },
     { name = "pydantic", specifier = ">=2.9.2,<3" },
     { name = "python-multipart", specifier = ">=0.0.20,<0.0.21" },
     { name = "rich", specifier = ">=13.9.4" },
+    { name = "safetensors", specifier = ">=0.4.0" },
     { name = "sse-starlette", specifier = ">=2.1.3,<3" },
     { name = "uvicorn", specifier = ">=0.34.0,<0.35" },
 ]

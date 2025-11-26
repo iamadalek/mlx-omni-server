@@ -42,8 +42,8 @@ dependencies = [
     "numba>=0.57.0",
     # images
     "mflux>=0.11.0,<0.12",
-    # embeddings
-    "mlx-embeddings>=0.0.3",
+    # embeddings (>=0.0.4 required for Qwen3-Embedding support)
+    "mlx-embeddings>=0.0.4",
     # reranking
     "numpy>=1.24.0",
     "safetensors>=0.4.0",

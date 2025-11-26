@@ -151,7 +151,11 @@ class EmbeddingsService:
                     )
                     # Fall back to the generate function
                     output = generate(model, processor, text)
-                    if hasattr(output, "last_hidden_state"):
+                    # Priority: text_embeds (Qwen3-Embedding, already pooled/normalized)
+                    # > last_hidden_state (BERT-style, use CLS token) > raw output
+                    if hasattr(output, "text_embeds") and output.text_embeds is not None:
+                        embedding = output.text_embeds
+                    elif hasattr(output, "last_hidden_state"):
                         embedding = output.last_hidden_state[:, 0, :]
                     else:
                         embedding = output

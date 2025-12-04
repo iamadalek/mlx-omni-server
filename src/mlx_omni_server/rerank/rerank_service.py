@@ -1,10 +1,42 @@
+import os
+from pathlib import Path
 from typing import Any, Dict, List, Union
 
 import tiktoken
+from huggingface_hub import snapshot_download
 
 from ..utils.logger import logger
 from .jina_mlx_reranker import MLXReranker
 from .schema import RerankRequest, RerankResponse, RerankResult, RerankUsage
+
+
+def resolve_model_path(model_id: str) -> str:
+    """Resolve a model ID to a local filesystem path.
+
+    Handles:
+    - HuggingFace model IDs (e.g., "jinaai/jina-reranker-v3-mlx")
+    - Local paths (e.g., "/path/to/model" or "./model")
+    """
+    # If it's already a valid local path, use it
+    if os.path.isdir(model_id):
+        return model_id
+
+    # Check if it looks like a HuggingFace model ID (contains /)
+    if "/" in model_id and not model_id.startswith(("/", "./")):
+        try:
+            # Download/cache the model and return the local path
+            local_path = snapshot_download(
+                repo_id=model_id,
+                local_files_only=False,  # Allow downloading if not cached
+            )
+            logger.info(f"Resolved HuggingFace model {model_id} to {local_path}")
+            return local_path
+        except Exception as e:
+            logger.warning(f"Failed to resolve {model_id} via HuggingFace Hub: {e}")
+            # Fall back to using as-is
+            return model_id
+
+    return model_id
 
 
 class RerankService:
@@ -30,10 +62,17 @@ class RerankService:
         if model_id not in self._models:
             logger.info(f"Loading reranker model: {model_id}")
             try:
-                # For Jina Reranker v3 MLX, model_id should be path to model directory
-                # Default to current directory if just model name provided
-                model_path = model_id if "/" in model_id else "."
-                projector_path = f"{model_path}/projector.safetensors"
+                # Resolve model_id to local filesystem path (handles HuggingFace IDs)
+                model_path = resolve_model_path(model_id)
+                projector_path = os.path.join(model_path, "projector.safetensors")
+
+                # Verify projector file exists
+                if not os.path.isfile(projector_path):
+                    raise FileNotFoundError(
+                        f"projector.safetensors not found at {projector_path}. "
+                        f"This file is required for reranking models."
+                    )
+
                 reranker = MLXReranker(model_path=model_path, projector_path=projector_path)
                 self._models[model_id] = reranker
             except Exception as e:

@@ -1,13 +1,32 @@
+"""Reranking service with auto-detection of reranker architecture.
+
+Supports two reranker architectures:
+1. Bi-encoder + Projector (Jina style): Fast, requires projector.safetensors
+2. Cross-encoder (Qwen3 style): More accurate, uses generative scoring
+"""
+
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Protocol, Union
 
 import tiktoken
 from huggingface_hub import snapshot_download
 
 from ..utils.logger import logger
+from .cross_encoder_reranker import CrossEncoderReranker
 from .jina_mlx_reranker import MLXReranker
 from .schema import RerankRequest, RerankResponse, RerankResult, RerankUsage
+
+
+class RerankerProtocol(Protocol):
+    """Protocol for reranker implementations."""
+
+    def rerank(
+        self,
+        query: str,
+        documents: List[str],
+        top_n: int | None = None,
+        return_embeddings: bool = False,
+    ) -> List[dict]: ...
 
 
 def resolve_model_path(model_id: str) -> str:
@@ -39,42 +58,63 @@ def resolve_model_path(model_id: str) -> str:
     return model_id
 
 
+def has_projector(model_path: str) -> bool:
+    """Check if a model has a projector.safetensors file."""
+    projector_path = os.path.join(model_path, "projector.safetensors")
+    return os.path.isfile(projector_path)
+
+
+def create_reranker(model_id: str, model_path: str) -> RerankerProtocol:
+    """Create the appropriate reranker based on model architecture.
+
+    Auto-detects:
+    - If projector.safetensors exists: Use Jina-style bi-encoder
+    - Otherwise: Use cross-encoder (generative scoring)
+    """
+    if has_projector(model_path):
+        logger.info(f"Using bi-encoder reranker (projector found) for {model_id}")
+        projector_path = os.path.join(model_path, "projector.safetensors")
+        return MLXReranker(model_path=model_path, projector_path=projector_path)
+    else:
+        logger.info(f"Using cross-encoder reranker (no projector) for {model_id}")
+        return CrossEncoderReranker(model_path=model_path)
+
+
 class RerankService:
-    """Service for reranking documents using MLX models."""
+    """Service for reranking documents using MLX models.
+
+    Automatically detects and uses the appropriate reranker architecture:
+    - Bi-encoder + Projector (Jina): Fast, single forward pass
+    - Cross-encoder (Qwen3): More accurate, one pass per document
+    """
 
     def __init__(self):
         # Map of loaded models for caching
-        self._models: Dict[str, MLXReranker] = {}
+        self._models: Dict[str, RerankerProtocol] = {}
         # Default encoder for token counting
         try:
             self._default_tokenizer = tiktoken.get_encoding("cl100k_base")
-        except:
+        except Exception:
             try:
                 self._default_tokenizer = tiktoken.get_encoding("p50k_base")
-            except:
+            except Exception:
                 logger.warning(
                     "Could not load any tiktoken encoding, token counts may be inaccurate"
                 )
                 self._default_tokenizer = None
 
-    def _get_model(self, model_id: str) -> MLXReranker:
+    def _get_model(self, model_id: str) -> RerankerProtocol:
         """Get or load a reranker model based on its ID."""
         if model_id not in self._models:
             logger.info(f"Loading reranker model: {model_id}")
             try:
                 # Resolve model_id to local filesystem path (handles HuggingFace IDs)
                 model_path = resolve_model_path(model_id)
-                projector_path = os.path.join(model_path, "projector.safetensors")
 
-                # Verify projector file exists
-                if not os.path.isfile(projector_path):
-                    raise FileNotFoundError(
-                        f"projector.safetensors not found at {projector_path}. "
-                        f"This file is required for reranking models."
-                    )
-
-                reranker = MLXReranker(model_path=model_path, projector_path=projector_path)
+                # Create appropriate reranker based on architecture
+                reranker = create_reranker(model_id, model_path)
                 self._models[model_id] = reranker
+
             except Exception as e:
                 logger.error(f"Error loading reranker model {model_id}: {str(e)}")
                 raise RuntimeError(f"Failed to load reranker model: {str(e)}")
